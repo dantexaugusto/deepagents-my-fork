@@ -21,6 +21,24 @@
 
 <br>
 
+> **Fork Notice**
+>
+> This is a personal fork of [langchain-ai/deepagents](https://github.com/langchain-ai/deepagents) with extended provider support.
+>
+> **What's different in this fork:**
+> - Added **OpenRouter** as a provider, enabling access to 200+ models through a single API
+> - Default model: `moonshotai/kimi-k2.5`
+> - Includes `.env.example` template for easy configuration
+>
+> To use OpenRouter, set your API key:
+> ```bash
+> export OPENROUTER_API_KEY=sk-or-v1-your-key-here
+> ```
+>
+> For the original project and official documentation, visit the [upstream repository](https://github.com/langchain-ai/deepagents).
+
+<br>
+
 Deep Agents is an agent harness.  An opinionated, ready-to-run agent out of the box. Instead of wiring up prompts, tools, and context management yourself, you get a working agent immediately and customize what you need.
 
 **What's included:**
