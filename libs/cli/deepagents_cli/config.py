@@ -370,6 +370,7 @@ class Settings:
     anthropic_api_key: str | None
     google_api_key: str | None
     tavily_api_key: str | None
+    openrouter_api_key: str | None
 
     # Google Cloud configuration (for VertexAI)
     google_cloud_project: str | None
@@ -401,6 +402,7 @@ class Settings:
         anthropic_key = os.environ.get("ANTHROPIC_API_KEY")
         google_key = os.environ.get("GOOGLE_API_KEY")
         tavily_key = os.environ.get("TAVILY_API_KEY")
+        openrouter_key = os.environ.get("OPENROUTER_API_KEY")
         google_cloud_project = os.environ.get("GOOGLE_CLOUD_PROJECT")
 
         # Detect LangSmith configuration
@@ -419,6 +421,7 @@ class Settings:
             anthropic_api_key=anthropic_key,
             google_api_key=google_key,
             tavily_api_key=tavily_key,
+            openrouter_api_key=openrouter_key,
             google_cloud_project=google_cloud_project,
             deepagents_langchain_project=deepagents_langchain_project,
             user_langchain_project=user_langchain_project,
@@ -454,6 +457,11 @@ class Settings:
     def has_tavily(self) -> bool:
         """Check if Tavily API key is configured."""
         return self.tavily_api_key is not None
+
+    @property
+    def has_openrouter(self) -> bool:
+        """Check if OpenRouter API key is configured."""
+        return self.openrouter_api_key is not None
 
     @property
     def has_deepagents_langchain_project(self) -> bool:
@@ -801,6 +809,9 @@ def create_model(model_name_override: str | None = None) -> BaseChatModel:
 
         model_name = model_name_override
     # Use environment variable defaults, detect provider by API key priority
+    elif settings.has_openrouter:
+        provider = "openrouter"
+        model_name = os.environ.get("OPENROUTER_MODEL", "moonshotai/kimi-k2.5")
     elif settings.has_openai:
         provider = "openai"
         model_name = os.environ.get("OPENAI_MODEL", "gpt-5.2")
@@ -816,6 +827,7 @@ def create_model(model_name_override: str | None = None) -> BaseChatModel:
     else:
         console.print("[bold red]Error:[/bold red] No credentials configured.")
         console.print("\nPlease set one of the following environment variables:")
+        console.print("  - OPENROUTER_API_KEY (for OpenRouter models)")
         console.print("  - OPENAI_API_KEY     (for OpenAI models like gpt-5.2)")
         console.print("  - ANTHROPIC_API_KEY  (for Claude models)")
         console.print("  - GOOGLE_API_KEY     (for Google Gemini models)")
@@ -824,7 +836,7 @@ def create_model(model_name_override: str | None = None) -> BaseChatModel:
             "with Application Default Credentials)"
         )
         console.print("\nExample:")
-        console.print("  export OPENAI_API_KEY=your_api_key_here")
+        console.print("  export OPENROUTER_API_KEY=your_api_key_here")
         console.print("\nOr add it to your .env file.")
         sys.exit(1)
 
@@ -834,7 +846,15 @@ def create_model(model_name_override: str | None = None) -> BaseChatModel:
 
     # Create the model
     model: BaseChatModel
-    if provider == "openai":
+    if provider == "openrouter":
+        from langchain_openai import ChatOpenAI
+
+        model = ChatOpenAI(
+            model=model_name,
+            openai_api_key=settings.openrouter_api_key,
+            openai_api_base="https://openrouter.ai/api/v1",
+        )
+    elif provider == "openai":
         from langchain_openai import ChatOpenAI
 
         model = ChatOpenAI(model=model_name)  # type: ignore[call-arg]
